@@ -58,9 +58,15 @@ public:
         return M;
     }
 
-
     std::vector<T> &operator[](size_t i) {
         return matrix[i];
+    }
+
+    Matrix<T> &zero_matrix(size_t n, size_t m) {
+        std::vector<T> B(m, 0);
+        std::vector<std::vector<T>> A(n, B);
+        Matrix<T> Zereos(n, m, A);
+        return Zereos;
     }
 
 
@@ -78,9 +84,33 @@ std::ostream &operator<<(std::ostream &out, Matrix<T> A) {
     return out;
 }
 
+template<class T>
+Matrix<T> &operator*(Matrix<T> A, Matrix<T> B) {
+    if (A.get_colomns_number() != B.get_lines_number()) {
+        std::cerr << "Error: Unable to perfom matrix multiplication";
+        exit(EXIT_FAILURE);
+    }
+    std::vector<std::vector<T>> C;
+    for (size_t i = 0; i < A.get_lines_number(); ++i) {
+        std::vector<T> new_line;
+        for (size_t j = 0; j < B.get_colomns_number(); ++j) {
+            T new_element = 0;
+            for (size_t k = 0; k < A.get_colomns_number(); ++k) {
+                new_element += A[i][k] * B[k][j];
+            }
+            new_line.push_back(new_element);
+        }
+        C.push_back(new_line);
+    }
+    Matrix<T>* new_matrix = new Matrix<T>(A.get_lines_number(), B.get_colomns_number(), C);
+    return *new_matrix;
+}
+
 
 int main() {
     Matrix<int> a;
-    std::cout << a;
+    Matrix<int> b;
+
+    std::cout << a << "\n" << b << "\n" << a*b;
     return 0;
 }
