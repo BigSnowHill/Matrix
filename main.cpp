@@ -62,13 +62,22 @@ public:
         return matrix[i];
     }
 
-    Matrix<T> &zero_matrix(size_t n, size_t m) {
+    static Matrix<T> &zero_matrix(size_t n, size_t m) {
         std::vector<T> B(m, 0);
         std::vector<std::vector<T>> A(n, B);
-        Matrix<T> Zereos(n, m, A);
-        return Zereos;
+        Matrix<T>* Zereos = new Matrix(n, m, A);
+        return *Zereos;
     }
 
+    static Matrix<T> &E_matrix(size_t n){
+        std::vector<T> B(n, 0);
+        std::vector<std::vector<T>> A(n, B);
+        for(int i = 0; i < n; ++i){
+            A[i][i] = 1;
+        }
+        Matrix<T>* E = new Matrix(n, n, A);
+        return *E;
+    }
 
 };
 
@@ -108,6 +117,8 @@ Matrix<T> &operator*(Matrix<T> A, Matrix<T> B) {
 
 
 int main() {
+    std::cout << Matrix<int>::zero_matrix(2, 2);
+    std::cout << Matrix<int>::E_matrix(3);
     Matrix<int> a;
     Matrix<int> b;
 
