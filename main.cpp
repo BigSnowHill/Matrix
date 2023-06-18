@@ -103,6 +103,10 @@ std::ostream &operator<<(std::ostream &out, Matrix<T> A) {
 
 template<class T>
 Matrix<T> &operator*(Matrix<T> A, Matrix<T> B) {
+    if(A.get_colomns_number() != B.get_lines_number()){
+        std::cerr << "Error: impossible to multiply matrices.\n";
+        exit(EXIT_FAILURE);
+    }
     if (A.get_colomns_number() != B.get_lines_number()) {
         std::cerr << "Error: Unable to perfom matrix multiplication";
         exit(EXIT_FAILURE);
@@ -142,16 +146,52 @@ Matrix<T>& operator*(T c, Matrix<T> A){
     return A * c;
 }
 
+template<class T>
+Matrix<T>& operator+(Matrix<T> A, Matrix<T> B){
+    if(A.get_colomns_number() != B.get_colomns_number() || A.get_lines_number() != B.get_lines_number()){
+        std::cerr << "Error: impossible to add matrices.";
+        exit(EXIT_FAILURE);
+    }
+    size_t n = A.get_lines_number(), m = A.get_colomns_number();
+    std::vector<T> line(m, 0);
+    std::vector<std::vector<T>> lines(n, line);
+    for(int i = 0; i < n; ++i){
+        for(int j = 0; j < m; ++j){
+            lines[i][j] = A[i][j] + B[i][j];
+        }
+    }
+    Matrix<T>* C = new Matrix<T>(n, m, lines);
+    return *C;
+}
+
+template<class T>
+Matrix<T>& operator-(Matrix<T> A, Matrix<T> B){
+    if(A.get_colomns_number() != B.get_colomns_number() || A.get_lines_number() != B.get_lines_number()){
+        std::cerr << "Error: impossible to subtract matrices.";
+        exit(EXIT_FAILURE);
+    }
+    size_t n = A.get_lines_number(), m = A.get_colomns_number();
+    std::vector<T> line(m, 0);
+    std::vector<std::vector<T>> lines(n, line);
+    for(int i = 0; i < n; ++i){
+        for(int j = 0; j < m; ++j){
+            lines[i][j] = A[i][j] - B[i][j];
+        }
+    }
+    Matrix<T>* C = new Matrix<T>(n, m, lines);
+    return *C;
+}
+
 
 
 int main() {
 //    std::cout << Matrix<int>::zero_matrix(2, 2);
 //    std::cout << Matrix<int>::E_matrix(3);
     Matrix<int> a;
-//    Matrix<int> b;
-    a *= 3;
-    std::cout << a << "\n" << a * 4 << "\n" << 4 * a;
-
+    Matrix<int> b;
+//    a *= 3;
+//    std::cout << a << "\n" << a * 4 << "\n" << 4 * a;
 //    std::cout << a << "\n" << b << "\n" << a*b;
+    std::cout << a + b << "\n" << a - b;
     return 0;
 }
