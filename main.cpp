@@ -62,6 +62,14 @@ public:
         return matrix[i];
     }
 
+    void operator*=(T number){
+        for(int i = 0; i < N; ++i){
+            for(int j = 0; j < M; ++j){
+                matrix[i][j] *= number;
+            }
+        }
+    }
+
     static Matrix<T> &zero_matrix(size_t n, size_t m) {
         std::vector<T> B(m, 0);
         std::vector<std::vector<T>> A(n, B);
@@ -115,13 +123,35 @@ Matrix<T> &operator*(Matrix<T> A, Matrix<T> B) {
     return *new_matrix;
 }
 
+template<class T>
+Matrix<T>& operator*(Matrix<T> A, T c){
+    size_t n = A.get_lines_number(), m = A.get_colomns_number();
+    std::vector<T> line(m, 0);
+    std::vector<std::vector<T>> lines(n, line);
+    for(int i = 0; i < n; ++i){
+        for(int j = 0; j < m; ++j){
+            lines[i][j] = A[i][j] * c;
+        }
+    }
+    Matrix<T>* Ac = new Matrix<T>(n, m , lines);
+    return *Ac;
+}
+
+template<class T>
+Matrix<T>& operator*(T c, Matrix<T> A){
+    return A * c;
+}
+
+
 
 int main() {
-    std::cout << Matrix<int>::zero_matrix(2, 2);
-    std::cout << Matrix<int>::E_matrix(3);
+//    std::cout << Matrix<int>::zero_matrix(2, 2);
+//    std::cout << Matrix<int>::E_matrix(3);
     Matrix<int> a;
-    Matrix<int> b;
+//    Matrix<int> b;
+    a *= 3;
+    std::cout << a << "\n" << a * 4 << "\n" << 4 * a;
 
-    std::cout << a << "\n" << b << "\n" << a*b;
+//    std::cout << a << "\n" << b << "\n" << a*b;
     return 0;
 }
