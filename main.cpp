@@ -1,197 +1,94 @@
 #include <iostream>
 #include <vector>
+#include <queue>
 #include <string>
+#include <sstream>
 #include <fstream>
+#include <algorithm>
+#include <cmath>
+#include <thread>
+#include <chrono>
+#include <functional>
+#include <future>
 
-template<class T>
-class Matrix {
-private:
-    size_t N, M;
-    std::vector<std::vector<T>> matrix;
+//#include "matrix.h"
+//#include "parallel_matrix.h"
+#include "parallel_matrix_async.h"
+
+
+struct Func{
 public:
-    explicit Matrix(size_t n, size_t m, std::vector<std::vector<T>> new_matrix) : N(n), M(m), matrix(new_matrix) {};
-
-    Matrix(size_t n, size_t m) : N(n), M(m) {
-        for (size_t i = 0; i < N; ++i) {
-            std::vector<T> elem_vector;
-            for (size_t j = 0; j < M; ++j) {
-                T element;
-                std::cin >> element;
-                elem_vector.push_back(element);
-            }
-            matrix.push_back(elem_vector);
-        }
-    }
-
-    Matrix() {
-        std::cin >> N >> M;
-        for (size_t i = 0; i < N; ++i) {
-            std::vector<T> elem_vector;
-            for (size_t j = 0; j < M; ++j) {
-                T element;
-                std::cin >> element;
-                elem_vector.push_back(element);
-            }
-            matrix.push_back(elem_vector);
-        }
-    }
-
-    Matrix(const std::string &filename) {
-        std::ifstream file_in(filename);
-        file_in >> N >> M;
-        for (size_t i = 0; i < N; ++i) {
-            std::vector<T> elem_vector;
-            for (size_t j = 0; j < M; ++j) {
-                T element;
-                file_in >> element;
-                elem_vector.push_back(element);
-            }
-            matrix.push_back(elem_vector);
-        }
-    }
-
-    size_t get_lines_number() {
-        return N;
-    }
-
-    size_t get_colomns_number() {
-        return M;
-    }
-
-    std::vector<T> &operator[](size_t i) {
-        return matrix[i];
-    }
-
-    void operator*=(T number){
-        for(int i = 0; i < N; ++i){
-            for(int j = 0; j < M; ++j){
-                matrix[i][j] *= number;
-            }
-        }
-    }
-
-    static Matrix<T> &zero_matrix(size_t n, size_t m) {
-        std::vector<T> B(m, 0);
-        std::vector<std::vector<T>> A(n, B);
-        Matrix<T>* Zereos = new Matrix(n, m, A);
-        return *Zereos;
-    }
-
-    static Matrix<T> &E_matrix(size_t n){
-        std::vector<T> B(n, 0);
-        std::vector<std::vector<T>> A(n, B);
-        for(int i = 0; i < n; ++i){
-            A[i][i] = 1;
-        }
-        Matrix<T>* E = new Matrix(n, n, A);
-        return *E;
-    }
-
+//    Func(){};
+    virtual void do_func(){};
 };
 
-
 template<class T>
-std::ostream &operator<<(std::ostream &out, Matrix<T> A) {
-    for (size_t i = 0; i < A.get_lines_number(); ++i) {
-        for (size_t j = 0; j < A.get_colomns_number(); ++j) {
-            out << A[i][j] << " ";
-        }
-        out << "\n";
-    }
-    return out;
-}
+void function_clock(T f) {
+    auto start = std::chrono::steady_clock::now();
+    auto end = std::chrono::steady_clock::now();
+    auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
 
-template<class T>
-Matrix<T> &operator*(Matrix<T> A, Matrix<T> B) {
-    if(A.get_colomns_number() != B.get_lines_number()){
-        std::cerr << "Error: impossible to multiply matrices.\n";
-        exit(EXIT_FAILURE);
-    }
-    if (A.get_colomns_number() != B.get_lines_number()) {
-        std::cerr << "Error: Unable to perfom matrix multiplication";
-        exit(EXIT_FAILURE);
-    }
-    std::vector<std::vector<T>> C;
-    for (size_t i = 0; i < A.get_lines_number(); ++i) {
-        std::vector<T> new_line;
-        for (size_t j = 0; j < B.get_colomns_number(); ++j) {
-            T new_element = 0;
-            for (size_t k = 0; k < A.get_colomns_number(); ++k) {
-                new_element += A[i][k] * B[k][j];
-            }
-            new_line.push_back(new_element);
-        }
-        C.push_back(new_line);
-    }
-    Matrix<T>* new_matrix = new Matrix<T>(A.get_lines_number(), B.get_colomns_number(), C);
-    return *new_matrix;
-}
+    start = std::chrono::steady_clock::now();
 
-template<class T>
-Matrix<T>& operator*(Matrix<T> A, T c){
-    size_t n = A.get_lines_number(), m = A.get_colomns_number();
-    std::vector<T> line(m, 0);
-    std::vector<std::vector<T>> lines(n, line);
-    for(int i = 0; i < n; ++i){
-        for(int j = 0; j < m; ++j){
-            lines[i][j] = A[i][j] * c;
-        }
-    }
-    Matrix<T>* Ac = new Matrix<T>(n, m , lines);
-    return *Ac;
-}
+    f.do_func();
 
-template<class T>
-Matrix<T>& operator*(T c, Matrix<T> A){
-    return A * c;
-}
-
-template<class T>
-Matrix<T>& operator+(Matrix<T> A, Matrix<T> B){
-    if(A.get_colomns_number() != B.get_colomns_number() || A.get_lines_number() != B.get_lines_number()){
-        std::cerr << "Error: impossible to add matrices.";
-        exit(EXIT_FAILURE);
-    }
-    size_t n = A.get_lines_number(), m = A.get_colomns_number();
-    std::vector<T> line(m, 0);
-    std::vector<std::vector<T>> lines(n, line);
-    for(int i = 0; i < n; ++i){
-        for(int j = 0; j < m; ++j){
-            lines[i][j] = A[i][j] + B[i][j];
-        }
-    }
-    Matrix<T>* C = new Matrix<T>(n, m, lines);
-    return *C;
-}
-
-template<class T>
-Matrix<T>& operator-(Matrix<T> A, Matrix<T> B){
-    if(A.get_colomns_number() != B.get_colomns_number() || A.get_lines_number() != B.get_lines_number()){
-        std::cerr << "Error: impossible to subtract matrices.";
-        exit(EXIT_FAILURE);
-    }
-    size_t n = A.get_lines_number(), m = A.get_colomns_number();
-    std::vector<T> line(m, 0);
-    std::vector<std::vector<T>> lines(n, line);
-    for(int i = 0; i < n; ++i){
-        for(int j = 0; j < m; ++j){
-            lines[i][j] = A[i][j] - B[i][j];
-        }
-    }
-    Matrix<T>* C = new Matrix<T>(n, m, lines);
-    return *C;
+    end = std::chrono::steady_clock::now();
+    ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
+    std::cout << ns.count() << " ns\n";
 }
 
 
+struct FuncEMatrix : public Func {
+private:
+    size_t N;
+public:
+    explicit FuncEMatrix(size_t n) : N(n) {};
+    void do_func(){
+        Matrix<double> A = Matrix<double>::E_matrix(N);
+    }
+};
+
+struct FuncAddition : public Func {
+private:
+    Matrix<double> A, B;
+public:
+    explicit FuncAddition(Matrix<double> A, Matrix<double> B) : A(A), B(B) {};
+    void do_func(){
+        A + B;
+    }
+};
+
+struct FuncMultiplication : public Func {
+private:
+    Matrix<double> A, B;
+public:
+    explicit FuncMultiplication(Matrix<double> A, Matrix<double> B) : A(A), B(B) {};
+    void do_func(){
+        A * B;
+    }
+};
+
+struct FuncInverseMatrix : public Func{
+private:
+    Matrix<double> A;
+public:
+    explicit FuncInverseMatrix(Matrix<double> A) : A(A){};
+    void do_func(){
+        !A;
+    }
+};
 
 int main() {
-//    std::cout << Matrix<int>::zero_matrix(2, 2);
-//    std::cout << Matrix<int>::E_matrix(3);
-    Matrix<int> a;
-    Matrix<int> b;
-//    a *= 3;
-//    std::cout << a << "\n" << a * 4 << "\n" << 4 * a;
-//    std::cout << a << "\n" << b << "\n" << a*b;
-    std::cout << a + b << "\n" << a - b;
+    for (size_t i = 1; i <= 1024; i*=2) {
+//    for (size_t i = 1; i <= 10; ++i) {
+//    size_t i = 10;
+        std::cout << "Time for matrix with demension: " << i << "x" << i << std::endl;
+        Matrix<double> A = Matrix<double>::E_matrix(i), B = Matrix<double>::E_matrix(i);
+        FuncEMatrix f1(i); FuncAddition f2(A, B); FuncMultiplication f3(A, B); FuncInverseMatrix f4(A);
+//        std::cout << "Identity matrix:"; function_clock(f1);
+//        std::cout << "Matrix addition:"; function_clock(f2);
+//        std::cout << "Matrix multiplication:"; function_clock(f3);
+        std::cout << "Inverse matrix:"; function_clock(f4);
+    }
     return 0;
 }
